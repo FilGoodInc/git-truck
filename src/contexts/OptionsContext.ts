@@ -5,6 +5,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { Grouping, type GroupingType } from "~/metrics/grouping"
 import { Depth, type DepthType } from "~/metrics/chartDepth"
+import type { GitBlobObject, GitObject } from "~/analyzer/model"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble Chart",
@@ -60,9 +61,15 @@ export type Options = {
   showFilesWithNoJSONRules: boolean
   dominantAuthorCutoff: number
   linkMetricAndSizeMetric: boolean
+  hoveredBlob: GitBlobObject | null
+  clickedObject: GitObject | null
+  minBubbleSize: number
+  maxBubbleSize: number
+  selectedAuthors: string[]
+  selectedFiles: string[]
+  selectedFilePaths: string[]
   fileGroups: FileGroup[]
-  selectedFilePaths: string[] // Keep this for individual files
-  fileAuthorMode: 'groups' | 'individual' // Add this new property
+  fileAuthorMode: 'groups' | 'individual'
 }
 
 export type OptionsContextType = Options & {
@@ -77,14 +84,20 @@ export type OptionsContextType = Options & {
   setCommitSortingMethodsType: (commitSortingMethodsType: CommitSortingMethodsType) => void
   setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) => void
   setCommitSearch: (commitSearch: string) => void
+  setHoveredBlob: (blob: GitBlobObject | null) => void
+  setClickedObject: (object: GitObject | null) => void
   setRenderCutoff: (renderCutoff: number) => void
+  setMinBubbleSize: (size: number) => void
+  setMaxBubbleSize: (size: number) => void
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
   setShowFilesWithNoJSONRules: (showFilesWithNoJSONRules: boolean) => void
   setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
   setLinkMetricAndSizeMetric: (link: boolean) => void
-  setSelectedFilePaths: (filePaths: string[]) => void // Updated setter
-  setFileGroups: (fileGroups: FileGroup[]) => void // Add this line
-  setFileAuthorMode: (mode: 'groups' | 'individual') => void // Add this line
+  setSelectedAuthors: (authors: string[]) => void
+  setSelectedFiles: (files: string[]) => void
+  setSelectedFilePaths: (filePaths: string[]) => void
+  setFileGroups: (fileGroups: FileGroup[]) => void
+  setFileAuthorMode: (mode: 'groups' | 'individual') => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -97,6 +110,7 @@ export function useOptions() {
   return context
 }
 
+// Make sure defaultOptions includes all properties:
 const defaultOptions: Options = {
   hasLoadedSavedOptions: false,
   metricType: Object.keys(Metric)[0] as MetricType,
@@ -115,9 +129,21 @@ const defaultOptions: Options = {
   showFilesWithNoJSONRules: false,
   dominantAuthorCutoff: 0,
   linkMetricAndSizeMetric: false,
-  fileGroups: [],
+  
+  // Add missing defaults:
+  hoveredBlob: null,
+  clickedObject: null,
+  minBubbleSize: 0.1,
+  maxBubbleSize: 2.0,
+  
+  // Felix branch defaults:
+  selectedAuthors: [],
+  selectedFiles: [],
+  
+  // Your defaults:
   selectedFilePaths: [],
-  fileAuthorMode: 'individual' // Default to individual mode
+  fileGroups: [],
+  fileAuthorMode: 'individual'
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -171,6 +197,24 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setLinkMetricAndSizeMetric: () => {
       throw new Error("No setLinkMetricAndSizeMetricSetter provided")
+    },
+    setHoveredBlob: () => {
+      throw new Error("No setHoveredBlobSetter provided")
+    },
+    setClickedObject: () => {
+      throw new Error("No setClickedObjectSetter provided")
+    },
+    setMinBubbleSize: () => {
+      throw new Error("No setMinBubbleSizeSetter provided")
+    },
+    setMaxBubbleSize: () => {
+      throw new Error("No setMaxBubbleSizeSetter provided")
+    },
+    setSelectedAuthors: () => {
+      throw new Error("No setSelectedAuthorsSetter provided")
+    },
+    setSelectedFiles: () => {
+      throw new Error("No setSelectedFilesSetter provided")
     },
     setSelectedFilePaths: () => {
       throw new Error("No setSelectedFilePathsSetter provided")

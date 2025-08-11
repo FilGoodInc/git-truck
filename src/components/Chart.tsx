@@ -104,8 +104,8 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       renderCutoff,
       showFilesWithNoJSONRules,
       fileGroups,
-      selectedFilePaths, // Add this parameter
-      fileAuthorMode     // Add this parameter
+      selectedFilePaths,
+      fileAuthorMode
     ).descendants()
     console.timeEnd("nodes")
     return res
@@ -1249,7 +1249,7 @@ function createAggregatedAuthorNodesForGroup(
             contribution = fileStats[filePath].nb_line_change || 0
             break
           case "EQUAL_SIZE":
-            contribution = 1 // Each file counts as 1 for this author
+            contribution = 1
             break
           default:
             contribution = fileStats[filePath].nb_line_change || 0
@@ -1269,34 +1269,20 @@ function createAggregatedAuthorNodesForGroup(
     .map(([author, contribution]) => ({ author, contribution }))
     .sort((a, b) => b.contribution - a.contribution)
 
-  // Calculate total for scaling
-  const totalContribution = authorArray.reduce((sum, item) => sum + item.contribution, 0)
-  
-  // Find min and max contributions for better scaling
+  // Calculate scaling values
   const maxContribution = Math.max(...authorArray.map(item => item.contribution))
-  const minContribution = Math.min(...authorArray.map(item => item.contribution))
   
-  console.log(`Group ${group.name}: Total contrib: ${totalContribution}, Max: ${maxContribution}, Min: ${minContribution}`) // Debug
-
   return authorArray.map(({ author, contribution }, index) => {
     let scaledSize: number
     
     if (sizeMetricType === "EQUAL_SIZE") {
-      // All authors get equal size
       scaledSize = 1000
     } else {
-      // Scale based on contribution relative to max in this group
       const contributionRatio = maxContribution > 0 ? contribution / maxContribution : 0
-      
-      // Use a more aggressive scaling to make differences more visible
-      const minSize = 200   // Minimum bubble size
-      const maxSize = 3000  // Maximum bubble size
-      
-      // Apply square root scaling to make differences more visible
+      const minSize = 200
+      const maxSize = 3000
       scaledSize = minSize + (maxSize - minSize) * Math.sqrt(contributionRatio)
     }
-    
-    console.log(`Author ${author}: contribution=${contribution}, scaledSize=${scaledSize}`) // Debug
 
     return {
       type: "blob",
